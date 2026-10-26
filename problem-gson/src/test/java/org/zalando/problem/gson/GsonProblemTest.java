@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.zalando.problem.DefaultProblem;
 import org.zalando.problem.Exceptional;
 import org.zalando.problem.Problem;
@@ -127,6 +129,48 @@ class GsonProblemTest {
 
         with(json).assertThat("$.instance", is("/problems/123"));
         assertThat(gson.fromJson(json, Problem.class).getInstance(), is(problem.getInstance()));
+    }
+
+    @Test
+    void shouldRoundTripNullStringInstance() {
+        final Problem problem = Problem.builder()
+                .withInstance(URI.create("null"))
+                .build();
+
+        final String json = gson.toJson(problem);
+
+        with(json).assertThat("$.instance", is("null"));
+        assertThat(gson.fromJson(json, Problem.class).getInstance(), is(problem.getInstance()));
+    }
+
+    @Test
+    void shouldRoundTripNullStringType() {
+        final Problem problem = Problem.builder()
+                .withType(URI.create("null"))
+                .build();
+
+        final String json = gson.toJson(problem);
+
+        with(json).assertThat("$.type", is("null"));
+        assertThat(gson.fromJson(json, Problem.class).getType(), is(problem.getType()));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "'', ''",
+            "https://example.org/problems/123?detail=1#section, https://example.org/problems/123?detail=1#section",
+            "/\uBB38\uC81C, /%EB%AC%B8%EC%A0%9C",
+            "/%6eull, /%6eull"
+    })
+    void shouldPreserveInstanceRepresentation(final String instance, final String expected) {
+        final Problem problem = Problem.builder()
+                .withInstance(URI.create(instance))
+                .build();
+
+        final String json = gson.toJson(problem);
+
+        with(json).assertThat("$.instance", is(expected));
+        assertThat(gson.fromJson(json, Problem.class).getInstance(), is(URI.create(expected)));
     }
 
     @Test

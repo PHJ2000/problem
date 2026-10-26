@@ -36,7 +36,7 @@ final class DefaultProblemAdapter extends TypeAdapter<ThrowableProblem> {
                 gson,
                 stackTraces,
                 gson.getAdapter(String.class),
-                gson.getAdapter(URI.class),
+                URITypeAdapter.INSTANCE,
                 gson.getAdapter(new TypeToken<Map<String, Object>>() {
                     // nothing to do here
                 }),
