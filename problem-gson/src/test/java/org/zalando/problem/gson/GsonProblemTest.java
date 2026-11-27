@@ -84,6 +84,52 @@ class GsonProblemTest {
     }
 
     @Test
+    void shouldPreserveNullInstance() {
+        final Problem problem = gson.fromJson("{\"instance\":null}", Problem.class);
+
+        assertThat(problem.getInstance(), is(nullValue()));
+        assertThat(problem.getType(), is(Problem.DEFAULT_TYPE));
+    }
+
+    @Test
+    void shouldRoundTripNullInstance() {
+        final Gson gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new ProblemAdapterFactory())
+                .serializeNulls()
+                .create();
+        final Problem problem = Problem.valueOf(BAD_REQUEST);
+
+        final Problem copy = gson.fromJson(gson.toJson(problem), Problem.class);
+
+        assertThat(copy.getInstance(), is(nullValue()));
+        assertThat(copy.getType(), is(Problem.DEFAULT_TYPE));
+    }
+
+    @Test
+    void shouldPreserveAboutBlankInstance() {
+        final Problem problem = Problem.builder()
+                .withInstance(URI.create("about:blank"))
+                .build();
+
+        final String json = gson.toJson(problem);
+
+        with(json).assertThat("$.instance", is("about:blank"));
+        assertThat(gson.fromJson(json, Problem.class).getInstance(), is(problem.getInstance()));
+    }
+
+    @Test
+    void shouldRoundTripRelativeInstance() {
+        final Problem problem = Problem.builder()
+                .withInstance(URI.create("/problems/123"))
+                .build();
+
+        final String json = gson.toJson(problem);
+
+        with(json).assertThat("$.instance", is("/problems/123"));
+        assertThat(gson.fromJson(json, Problem.class).getInstance(), is(problem.getInstance()));
+    }
+
+    @Test
     void shouldSerializeCustomProblem() {
         final int balance = 10;
         final int debit = 100;
